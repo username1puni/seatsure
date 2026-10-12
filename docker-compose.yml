@@ -1,0 +1,30 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: seatsure
+      MYSQL_USER: ${DB_USERNAME:-seatsure}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-seatsure}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      retries: 20
+    ports:
+      - "3306:3306"
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_URL: jdbc:mysql://db:3306/seatsure
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysqldata:
