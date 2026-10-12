@@ -22,17 +22,22 @@ public interface ShowSeatRepository extends JpaRepository<ShowSeat, Long> {
     /**
      * SELECT ... FOR UPDATE on the requested seats. Rows are always locked in id order so two
      * overlapping requests can't deadlock each other.
+     *
+     * No join fetch here on purpose: with a join MySQL also locks the joined seats rows, and
+     * depending on the plan it picks it locks seats and show_seats in a different order, which
+     * deadlocked under load. It also blocked the same seat in other shows of the screen.
+     * Seats are loaded lazily afterwards (batched, see Seat).
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select ss from ShowSeat ss join fetch ss.seat
+            select ss from ShowSeat ss
             where ss.showId = :showId and ss.seat.id in :seatIds
             order by ss.id
             """)
     List<ShowSeat> lockSeats(@Param("showId") Long showId, @Param("seatIds") Collection<Long> seatIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select ss from ShowSeat ss join fetch ss.seat where ss.bookingId = :bookingId order by ss.id")
+    @Query("select ss from ShowSeat ss where ss.bookingId = :bookingId order by ss.id")
     List<ShowSeat> lockByBooking(@Param("bookingId") Long bookingId);
 
     List<ShowSeat> findByBookingId(Long bookingId);

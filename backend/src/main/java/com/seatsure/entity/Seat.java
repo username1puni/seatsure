@@ -2,6 +2,8 @@ package com.seatsure.entity;
 
 import java.util.Comparator;
 
+import org.hibernate.annotations.BatchSize;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@BatchSize(size = 20)
 @Table(name = "seats")
 @Getter
 @Setter
