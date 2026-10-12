@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -71,7 +72,8 @@ public class GlobalExceptionHandler {
     }
 
     // Last line of defence: the unique key on booking_seats fired, or a row changed under us.
-    @ExceptionHandler({DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class})
+    @ExceptionHandler({DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class,
+            PessimisticLockingFailureException.class})
     ResponseEntity<ErrorResponse> handleRace(Exception ex, HttpServletRequest request) {
         log.info("Concurrent update on {}: {}", request.getRequestURI(), ex.getMessage());
         return build(HttpStatus.CONFLICT, "Someone else just changed this. Please refresh and try again.", request, null);
