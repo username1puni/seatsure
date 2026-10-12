@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: seatsure
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/seatsure}
+    username: ${DB_USERNAME:seatsure}
+    password: ${DB_PASSWORD:seatsure}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  mail:
+    # Leave MAIL_HOST empty to skip emails. Tickets can always be downloaded from the bookings page.
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  health:
+    mail:
+      enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  timezone: ${APP_TIMEZONE:Asia/Kolkata}
+  jwt:
+    # Must be at least 32 characters. Always override in production.
+    secret: ${JWT_SECRET:change-me-local-dev-secret-key-0123456789}
+    expiry-minutes: ${JWT_EXPIRY_MINUTES:1440}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+  booking:
+    hold-minutes: ${HOLD_MINUTES:5}
+    max-seats: 10
+    # how often the cleanup job looks for expired holds
+    expiry-check-ms: ${EXPIRY_CHECK_MS:10000}
+  payment:
+    # mock or razorpay. Razorpay needs test keys from the Razorpay dashboard.
+    gateway: ${PAYMENT_GATEWAY:mock}
+    mock-secret: ${MOCK_PAYMENT_SECRET:mock-gateway-secret-for-local-dev}
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:}
+      key-secret: ${RAZORPAY_KEY_SECRET:}
+  ticket:
+    # used to sign the QR code so a ticket can't be made up by hand
+    secret: ${TICKET_SECRET:change-me-ticket-signing-key}
+  mail:
+    from: ${MAIL_FROM:SeatSure <no-reply@seatsure.app>}
+  seed:
+    demo-data: ${SEED_DEMO_DATA:true}
