@@ -84,7 +84,8 @@ Every step that changes a seat runs inside one database transaction in `BookingS
 
 1. **Pessimistic lock on the hold.** `show_seats` has one row per seat per show. When a user holds
    seats, the service runs `SELECT ... FOR UPDATE` on exactly those rows (Spring Data
-   `@Lock(PESSIMISTIC_WRITE)`), always in id order. A second user asking for any of the same seats waits
+   `@Lock(PESSIMISTIC_WRITE)`), always in id order, and the query touches only `show_seats`. A second
+   user asking for any of the same seats waits
    on the row lock, and when the first transaction commits it sees the seat as `HELD` and gets
    `409 Conflict`. Either all requested seats are held or none are.
 2. **Unique key as a safety net.** `booking_seats` has a generated column `active_flag` that is `1`
@@ -99,8 +100,11 @@ Every step that changes a seat runs inside one database transaction in `BookingS
 4. **Payment confirm is all or nothing.** The payment row, the booking, the seats and the ticket token
    are written in one transaction. If anything fails in the middle, everything rolls back. A payment
    that arrives after the hold expired is refunded instead of confirmed.
-5. **One lock order everywhere** (booking row first, then seat rows by id), so these transactions do
-   not deadlock each other.
+5. **One lock order everywhere** (booking row first, then seat rows by id, one table per locking
+   query), so these transactions do not deadlock each other. An earlier version used a join fetch
+   inside the `FOR UPDATE` query; MySQL then also locked the joined `seats` rows, sometimes in a
+   different order, and the 16-thread test hit an occasional deadlock in CI. Locking only `show_seats`
+   fixed it (25 repeated runs, no deadlock), and a lock wait failure is now answered with `409` too.
 
 The tests in [`SeatBookingConcurrencyIT`](backend/src/test/java/com/seatsure/booking/SeatBookingConcurrencyIT.java)
 and [`HoldExpiryAndPaymentIT`](backend/src/test/java/com/seatsure/booking/HoldExpiryAndPaymentIT.java)
@@ -109,7 +113,7 @@ prove each point against MySQL 8.4 in Docker:
 | Test | Result |
 | --- | --- |
 | 20 threads hold the same seat at the same moment | exactly 1 succeeds, 19 get "seat taken" |
-| 16 threads with overlapping multi-seat selections | no seat is ever in two bookings, each hold is all or nothing |
+| 16 threads with overlapping multi-seat selections | no seat is ever in two bookings, each hold is all or nothing, no deadlocks |
 | Insert a second live `booking_seats` row directly | rejected by the unique key |
 | Stale update of a `show_seats` row | rejected by `@Version` |
 | Payment racing the expiry job (repeated 10 times) | always ends either confirmed or expired and refunded, never half done |
