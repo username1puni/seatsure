@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import MoviePage from './pages/MoviePage'
 import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './pages/RegisterPage'
+import SeatsPage from './pages/SeatsPage'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/movies/:id" element={<MoviePage />} />
+          <Route path="/shows/:id" element={<SeatsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFoundPage />} />
