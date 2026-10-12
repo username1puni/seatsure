@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminPage from './pages/AdminPage'
 import BookingPage from './pages/BookingPage'
 import CheckoutPage from './pages/CheckoutPage'
 import HomePage from './pages/HomePage'
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/checkout/:id" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
           <Route path="/bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
           <Route path="/bookings/:id" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute admin><AdminPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
